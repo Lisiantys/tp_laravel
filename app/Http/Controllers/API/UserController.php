@@ -2,9 +2,11 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Models\User;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
+use App\Http\Controllers\Controller;
+use Illuminate\Support\Facades\Hash;
 
 class UserController extends Controller
 {
@@ -13,7 +15,13 @@ class UserController extends Controller
      */
     public function index()
     {
-        //
+        $users = User::all();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Utilisateurs récupérés avec succès',
+            'users' => $users
+        ]);
     }
 
     /**
@@ -21,7 +29,19 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'pseudo' => 'required|string|max:255|unique:users',
+            'email' => 'required|string|email|max:255|unique:users',
+            'password' => 'required|string|min:8',
+            'image' => 'nullable|image',
+            'role_id' => 'required|exists:roles,id'
+        ]);
+
+        $validatedData["password"] = Hash::make($validatedData["password"]);
+
+        $user = User::create($validatedData);
+
+        return response()->json($user, 201);
     }
 
     /**
@@ -29,7 +49,12 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        //
+        $user = User::find($user->id);
+        if(!$user){
+            return response()->json(['message'=> 'User not found'],404 );
+        }
+
+        return response()->json($user);
     }
 
     /**
@@ -37,7 +62,23 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        //
+        $user = User::findOrFail($user->id);
+
+        $validatedData = $request->validate([
+            'pseudo' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+            'password' => 'sometimes|required|string|min:8',
+            'image' => 'nullable|image',
+            'role_id' => 'required|exists:roles,id'
+        ]);
+
+        if ($request->has('password')) {
+            $validatedData['password'] = Hash::make($request->password);
+        }
+
+        $user->update($validatedData);
+
+        return response()->json($user);
     }
 
     /**
@@ -45,6 +86,11 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        //
+        $user = User::find($user->id);
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
+        }
+        $user->delete();
+        return response()->json(['message' => 'User deleted']);
     }
 }
