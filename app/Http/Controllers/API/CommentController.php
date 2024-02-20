@@ -13,7 +13,13 @@ class CommentController extends Controller
      */
     public function index()
     {
-        //
+        $comments = Comment::all();
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Posts récupérés avec succès',
+            'users' => $comments
+        ]);
     }
 
     /**
@@ -21,7 +27,17 @@ class CommentController extends Controller
      */
     public function store(Request $request)
     {
-        //
+        $validatedData = $request->validate([
+            'content' => 'required|string',
+            'image' => 'nullable|image',
+            'tags' => 'nullable|string',
+            'post_id' => 'required|exists:posts,id',
+            'user_id' => 'required|exists:users,id'
+        ]);
+
+        $comment = Comment::create($validatedData);
+
+        return response()->json($comment, 201);
     }
 
     /**
@@ -29,7 +45,11 @@ class CommentController extends Controller
      */
     public function show(Comment $comment)
     {
-        //
+        $comment = Comment::find($comment->id);
+        if (!$comment) {
+            return response()->json(['message' => 'Comment not found'], 404);
+        }
+        return response()->json($comment);
     }
 
     /**
@@ -37,7 +57,17 @@ class CommentController extends Controller
      */
     public function update(Request $request, Comment $comment)
     {
-        //
+        $comment = Comment::findOrFail($comment->id);
+
+        $validatedData = $request->validate([
+            'content' => 'required|string',
+            'image' => 'nullable|image',
+            'tags' => 'nullable|string',
+        ]);
+
+        $comment->update($validatedData);
+
+        return response()->json($comment);
     }
 
     /**
@@ -45,6 +75,12 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        //
+        $comment = Comment::find($comment->id);
+        if (!$comment) {
+            return response()->json(['message' => 'Comment not found'], 404);
+        }
+        $comment->delete();
+        return response()->json(['message' => 'Comment deleted']);
     }
+
 }
