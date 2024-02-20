@@ -7,6 +7,7 @@ use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use Illuminate\Support\Facades\Hash;
+use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -29,19 +30,24 @@ class UserController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'pseudo' => 'required|string|max:255|unique:users',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8',
-            'image' => 'nullable|image',
-            'role_id' => 'required|exists:roles,id'
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'pseudo' => 'required|string|max:255|unique:users',
+                'email' => 'required|string|email|max:255|unique:users',
+                'password' => 'required|string|min:8',
+                'image' => 'nullable|image',
+                'role_id' => 'required|exists:roles,id'
+            ]);
 
-        $validatedData["password"] = Hash::make($validatedData["password"]);
+            $validatedData["password"] = Hash::make($validatedData["password"]);
 
-        $user = User::create($validatedData);
+            $user = User::create($validatedData);
 
-        return response()->json($user, 201);
+            return response()->json($user, 201);
+        } catch (ValidationException $e) {
+
+            return response()->json(['message' => 'Invalid data provided'], 400);
+        }
     }
 
     /**
@@ -50,8 +56,8 @@ class UserController extends Controller
     public function show(User $user)
     {
         $user = User::find($user->id);
-        if(!$user){
-            return response()->json(['message'=> 'User not found'],404 );
+        if (!$user) {
+            return response()->json(['message' => 'User not found'], 404);
         }
 
         return response()->json($user);
@@ -62,23 +68,27 @@ class UserController extends Controller
      */
     public function update(Request $request, User $user)
     {
-        $user = User::findOrFail($user->id);
+        try {
+            $user = User::findOrFail($user->id);
 
-        $validatedData = $request->validate([
-            'pseudo' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-            'password' => 'sometimes|required|string|min:8',
-            'image' => 'nullable|image',
-            'role_id' => 'required|exists:roles,id'
-        ]);
+            $validatedData = $request->validate([
+                'pseudo' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
+                'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
+                'password' => 'sometimes|required|string|min:8',
+                'image' => 'nullable|image',
+                'role_id' => 'required|exists:roles,id'
+            ]);
 
-        if ($request->has('password')) {
-            $validatedData['password'] = Hash::make($request->password);
+            if ($request->has('password')) {
+                $validatedData['password'] = Hash::make($request->password);
+            }
+
+            $user->update($validatedData);
+
+            return response()->json($user);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Invalid data provided'], 400);
         }
-
-        $user->update($validatedData);
-
-        return response()->json($user);
     }
 
     /**

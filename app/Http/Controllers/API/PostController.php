@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Models\Post;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 
 class PostController extends Controller
 {
@@ -27,16 +28,20 @@ class PostController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'content' => 'required|string',
-            'image' => 'nullable|image',
-            'tags' => 'required|string',
-            'user_id' => 'required|exists:users,id'
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'content' => 'required|string',
+                'image' => 'nullable|image',
+                'tags' => 'required|string',
+                'user_id' => 'required|exists:users,id'
+            ]);
 
-        $post = Post::create($validatedData);
+            $post = Post::create($validatedData);
 
-        return response()->json($post, 201);
+            return response()->json($post, 201);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Invalid data provided'], 400);
+        }
     }
 
     /**
@@ -56,17 +61,21 @@ class PostController extends Controller
      */
     public function update(Request $request, Post $post)
     {
-        $post = Post::findOrFail($post->id);
+        try {
+            $post = Post::findOrFail($post->id);
 
-        $validatedData = $request->validate([
-            'content' => 'required|string',
-            'image' => 'nullable|image',
-            'tags' => 'required|string',
-        ]);
+            $validatedData = $request->validate([
+                'content' => 'required|string',
+                'image' => 'nullable|image',
+                'tags' => 'required|string',
+            ]);
 
-        $post->update($validatedData);
+            $post->update($validatedData);
 
-        return response()->json($post);
+            return response()->json($post);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Invalid data provided'], 400);
+        }
     }
 
     /**

@@ -2,9 +2,10 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Models\Comment;
 use Illuminate\Http\Request;
+use App\Http\Controllers\Controller;
+use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
 {
@@ -27,17 +28,21 @@ class CommentController extends Controller
      */
     public function store(Request $request)
     {
-        $validatedData = $request->validate([
-            'content' => 'required|string',
-            'image' => 'nullable|image',
-            'tags' => 'nullable|string',
-            'post_id' => 'required|exists:posts,id',
-            'user_id' => 'required|exists:users,id'
-        ]);
+        try {
+            $validatedData = $request->validate([
+                'content' => 'required|string',
+                'image' => 'nullable|image',
+                'tags' => 'nullable|string',
+                'post_id' => 'required|exists:posts,id',
+                'user_id' => 'required|exists:users,id'
+            ]);
 
-        $comment = Comment::create($validatedData);
+            $comment = Comment::create($validatedData);
 
-        return response()->json($comment, 201);
+            return response()->json($comment, 201);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Invalid data provided'], 400);
+        }
     }
 
     /**
@@ -57,17 +62,21 @@ class CommentController extends Controller
      */
     public function update(Request $request, Comment $comment)
     {
-        $comment = Comment::findOrFail($comment->id);
+        try {
+            $comment = Comment::findOrFail($comment->id);
 
-        $validatedData = $request->validate([
-            'content' => 'required|string',
-            'image' => 'nullable|image',
-            'tags' => 'nullable|string',
-        ]);
+            $validatedData = $request->validate([
+                'content' => 'required|string',
+                'image' => 'nullable|image',
+                'tags' => 'nullable|string',
+            ]);
 
-        $comment->update($validatedData);
+            $comment->update($validatedData);
 
-        return response()->json($comment);
+            return response()->json($comment);
+        } catch (ValidationException $e) {
+            return response()->json(['message' => 'Invalid data provided'], 400);
+        }
     }
 
     /**
@@ -82,5 +91,4 @@ class CommentController extends Controller
         $comment->delete();
         return response()->json(['message' => 'Comment deleted']);
     }
-
 }
