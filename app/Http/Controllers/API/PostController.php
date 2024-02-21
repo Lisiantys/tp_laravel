@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Models\Post;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StorePostRequest;
+use App\Http\Requests\UpdatePostRequest;
 use Illuminate\Validation\ValidationException;
 
 class PostController extends Controller
@@ -26,15 +28,10 @@ class PostController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StorePostRequest $request)
     {
         try {
-            $validatedData = $request->validate([
-                'content' => 'required|string',
-                'image' => 'nullable|image',
-                'tags' => 'required|string',
-                'user_id' => 'required|exists:users,id'
-            ]);
+            $validatedData = $request->validate();
 
             $post = Post::create($validatedData);
 
@@ -59,16 +56,12 @@ class PostController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Post $post)
+    public function update(UpdatePostRequest $request, Post $post)
     {
         try {
             $post = Post::findOrFail($post->id);
 
-            $validatedData = $request->validate([
-                'content' => 'required|string',
-                'image' => 'nullable|image',
-                'tags' => 'required|string',
-            ]);
+            $validatedData = $request->validate();
 
             $post->update($validatedData);
 

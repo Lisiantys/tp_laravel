@@ -6,6 +6,8 @@ use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreUserRequest;
+use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Hash;
 use Illuminate\Validation\ValidationException;
 
@@ -28,16 +30,10 @@ class UserController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreUserRequest $request)
     {
         try {
-            $validatedData = $request->validate([
-                'pseudo' => 'required|string|max:255|unique:users',
-                'email' => 'required|string|email|max:255|unique:users',
-                'password' => 'required|string|min:8',
-                'image' => 'nullable|image',
-                'role_id' => 'required|exists:roles,id'
-            ]);
+            $validatedData = $request->validate();
 
             $validatedData["password"] = Hash::make($validatedData["password"]);
 
@@ -66,18 +62,12 @@ class UserController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, User $user)
+    public function update(UpdateUserRequest $request, User $user)
     {
         try {
             $user = User::findOrFail($user->id);
 
-            $validatedData = $request->validate([
-                'pseudo' => ['required', 'string', 'max:255', Rule::unique('users')->ignore($user->id)],
-                'email' => ['required', 'string', 'email', 'max:255', Rule::unique('users')->ignore($user->id)],
-                'password' => 'sometimes|required|string|min:8',
-                'image' => 'nullable|image',
-                'role_id' => 'required|exists:roles,id'
-            ]);
+            $validatedData = $request->validate();
 
             if ($request->has('password')) {
                 $validatedData['password'] = Hash::make($request->password);

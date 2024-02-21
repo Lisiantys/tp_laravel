@@ -5,6 +5,8 @@ namespace App\Http\Controllers\API;
 use App\Models\Comment;
 use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
+use App\Http\Requests\StoreCommentRequest;
+use App\Http\Requests\UpdateCommentRequest;
 use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
@@ -26,16 +28,10 @@ class CommentController extends Controller
     /**
      * Store a newly created resource in storage.
      */
-    public function store(Request $request)
+    public function store(StoreCommentRequest $request)
     {
         try {
-            $validatedData = $request->validate([
-                'content' => 'required|string',
-                'image' => 'nullable|image',
-                'tags' => 'nullable|string',
-                'post_id' => 'required|exists:posts,id',
-                'user_id' => 'required|exists:users,id'
-            ]);
+            $validatedData = $request->validate();
 
             $comment = Comment::create($validatedData);
 
@@ -60,16 +56,12 @@ class CommentController extends Controller
     /**
      * Update the specified resource in storage.
      */
-    public function update(Request $request, Comment $comment)
+    public function update(UpdateCommentRequest $request, Comment $comment)
     {
         try {
             $comment = Comment::findOrFail($comment->id);
 
-            $validatedData = $request->validate([
-                'content' => 'required|string',
-                'image' => 'nullable|image',
-                'tags' => 'nullable|string',
-            ]);
+            $validatedData = $request->validate();
 
             $comment->update($validatedData);
 
