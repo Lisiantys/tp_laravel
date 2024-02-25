@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Comment;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreCommentRequest;
 use App\Http\Requests\UpdateCommentRequest;
-use Illuminate\Validation\ValidationException;
 
 class CommentController extends Controller
 {
@@ -20,8 +18,8 @@ class CommentController extends Controller
 
         return response()->json([
             'status' => true,
-            'message' => 'Posts récupérés avec succès',
-            'users' => $comments
+            'message' => 'Commentaires récupérés avec succès',
+            'comments' => $comments
         ]);
     }
 
@@ -30,15 +28,13 @@ class CommentController extends Controller
      */
     public function store(StoreCommentRequest $request)
     {
-        try {
-            $validatedData = $request->validate();
+            $comment = Comment::create($request->all());
 
-            $comment = Comment::create($validatedData);
-
-            return response()->json($comment, 201);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Invalid data provided'], 400);
-        }
+            return response()->json([
+                'status' => true,
+                'message' => 'Commentaire créé avec succès',
+                'comment' => $comment
+            ], 201);
     }
 
     /**
@@ -46,11 +42,11 @@ class CommentController extends Controller
      */
     public function show(Comment $comment)
     {
-        $comment = Comment::find($comment->id);
-        if (!$comment) {
-            return response()->json(['message' => 'Comment not found'], 404);
-        }
-        return response()->json($comment);
+        return response()->json([
+            'status' => true,
+            'message' => 'Commentaire trouvé avec succès',
+            'user' => $comment
+        ]);
     }
 
     /**
@@ -58,17 +54,13 @@ class CommentController extends Controller
      */
     public function update(UpdateCommentRequest $request, Comment $comment)
     {
-        try {
-            $comment = Comment::findOrFail($comment->id);
+        $comment->update($request->all());
 
-            $validatedData = $request->validate();
-
-            $comment->update($validatedData);
-
-            return response()->json($comment);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Invalid data provided'], 400);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Commentaire mis à jour avec succès',
+            'user' => $comment
+        ]);
     }
 
     /**
@@ -76,11 +68,12 @@ class CommentController extends Controller
      */
     public function destroy(Comment $comment)
     {
-        $comment = Comment::find($comment->id);
-        if (!$comment) {
-            return response()->json(['message' => 'Comment not found'], 404);
-        }
         $comment->delete();
-        return response()->json(['message' => 'Comment deleted']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Commentaire supprimé avec succès',
+            'user' => $comment
+        ]);
     }
 }

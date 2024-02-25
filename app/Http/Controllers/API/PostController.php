@@ -3,11 +3,9 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\Post;
-use Illuminate\Http\Request;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StorePostRequest;
 use App\Http\Requests\UpdatePostRequest;
-use Illuminate\Validation\ValidationException;
 
 class PostController extends Controller
 {
@@ -30,15 +28,13 @@ class PostController extends Controller
      */
     public function store(StorePostRequest $request)
     {
-        try {
-            $validatedData = $request->validate();
+        $post = Post::create($request->all());
 
-            $post = Post::create($validatedData);
-
-            return response()->json($post, 201);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Invalid data provided'], 400);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Post créé avec succès',
+            'user' => $post
+        ], 201);
     }
 
     /**
@@ -46,11 +42,11 @@ class PostController extends Controller
      */
     public function show(Post $post)
     {
-        $post = Post::find($post->id);
-        if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
-        }
-        return response()->json($post);
+        return response()->json([
+            'status' => true,
+            'message' => 'Post trouvé avec succès',
+            'user' => $post
+        ]);
     }
 
     /**
@@ -58,17 +54,13 @@ class PostController extends Controller
      */
     public function update(UpdatePostRequest $request, Post $post)
     {
-        try {
-            $post = Post::findOrFail($post->id);
+        $post->update($request->all());
 
-            $validatedData = $request->validate();
-
-            $post->update($validatedData);
-
-            return response()->json($post);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Invalid data provided'], 400);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Post mis à jour avec succès',
+            'user' => $post
+        ]);
     }
 
     /**
@@ -76,11 +68,12 @@ class PostController extends Controller
      */
     public function destroy(Post $post)
     {
-        $post = Post::find($post->id);
-        if (!$post) {
-            return response()->json(['message' => 'Post not found'], 404);
-        }
         $post->delete();
-        return response()->json(['message' => 'Post deleted']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Post supprimé avec succès',
+            'user' => $post
+        ]);
     }
 }

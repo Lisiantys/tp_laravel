@@ -3,13 +3,10 @@
 namespace App\Http\Controllers\API;
 
 use App\Models\User;
-use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreUserRequest;
 use App\Http\Requests\UpdateUserRequest;
 use Illuminate\Support\Facades\Hash;
-use Illuminate\Validation\ValidationException;
 
 class UserController extends Controller
 {
@@ -32,18 +29,15 @@ class UserController extends Controller
      */
     public function store(StoreUserRequest $request)
     {
-        try {
-            $validatedData = $request->validate();
+        $request["password"] = Hash::make($request["password"]);
 
-            $validatedData["password"] = Hash::make($validatedData["password"]);
+        $user = User::create($request->all());
 
-            $user = User::create($validatedData);
-
-            return response()->json($user, 201);
-        } catch (ValidationException $e) {
-
-            return response()->json(['message' => 'Invalid data provided'], 400);
-        }
+        return response()->json([
+            'status' => true,
+            'message' => 'Utilisateur créé avec succès',
+            'user' => $user
+        ], 201);
     }
 
     /**
@@ -51,12 +45,11 @@ class UserController extends Controller
      */
     public function show(User $user)
     {
-        $user = User::find($user->id);
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
-        }
-
-        return response()->json($user);
+        return response()->json([
+            'status' => true,
+            'message' => 'Utilisateur trouvé avec succès',
+            'user' => $user
+        ]);
     }
 
     /**
@@ -64,21 +57,17 @@ class UserController extends Controller
      */
     public function update(UpdateUserRequest $request, User $user)
     {
-        try {
-            $user = User::findOrFail($user->id);
-
-            $validatedData = $request->validate();
-
             if ($request->has('password')) {
-                $validatedData['password'] = Hash::make($request->password);
+                $request['password'] = Hash::make($request->password);
             }
 
-            $user->update($validatedData);
+            $user->update($request->all());
 
-            return response()->json($user);
-        } catch (ValidationException $e) {
-            return response()->json(['message' => 'Invalid data provided'], 400);
-        }
+            return response()->json([
+                'status' => true,
+                'message' => 'Utilisateur mis à jour avec succès',
+                'user' => $user
+            ]);
     }
 
     /**
@@ -86,11 +75,12 @@ class UserController extends Controller
      */
     public function destroy(User $user)
     {
-        $user = User::find($user->id);
-        if (!$user) {
-            return response()->json(['message' => 'User not found'], 404);
-        }
         $user->delete();
-        return response()->json(['message' => 'User deleted']);
+
+        return response()->json([
+            'status' => true,
+            'message' => 'Utilisateur supprimé avec succès',
+            'user' => $user
+        ]);
     }
 }

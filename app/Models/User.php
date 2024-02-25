@@ -15,6 +15,8 @@ class User extends Authenticatable
 {
     use HasApiTokens, HasFactory, Notifiable;
 
+    protected $with = ['role'];
+
     public function posts(){
         return $this->hasMany(Post::class);
     }
@@ -39,8 +41,7 @@ class User extends Authenticatable
     protected $fillable = [
         'pseudo',
         'email',
-        'password',
-        'role_id'
+        'password'
     ];
 
     /**

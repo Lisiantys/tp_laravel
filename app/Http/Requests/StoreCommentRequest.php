@@ -23,7 +23,7 @@ class StoreCommentRequest extends FormRequest
     {
         return [
             'content' => 'required|string',
-            'image' => 'nullable|image',
+            'image' => 'nullable|image|mimes:jpg,jpeg,png,svg|max:2048',
             'tags' => 'nullable|string',
             'post_id' => 'required|exists:posts,id',
             'user_id' => 'required|exists:users,id'
